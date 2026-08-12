@@ -58,6 +58,30 @@ return [
             'ignore_exceptions' => false,
         ],
 
+        /*
+        |----------------------------------------------------------------------
+        | Application structured log channel
+        |----------------------------------------------------------------------
+        | A daily-rotating JSON channel used for all application-level events
+        | (appointment.requested, appointment.confirmed, resource.allocation_failed,
+        | customer.resolved, etc.). The request_id is injected automatically by
+        | AssignRequestId middleware via Log::withContext().
+        |
+        | Set LOG_CHANNEL=app in .env to use this channel exclusively, or add
+        | it to LOG_STACK to combine it with other channels.
+        */
+        'app' => [
+            'driver'             => 'daily',
+            'path'               => storage_path('logs/app.log'),
+            'level'              => env('LOG_LEVEL', 'debug'),
+            'days'               => env('LOG_DAILY_DAYS', 14),
+            'formatter'          => Monolog\Formatter\JsonFormatter::class,
+            'formatter_with'     => [
+                'dateFormat' => 'Y-m-d\TH:i:s.vP',
+            ],
+            'replace_placeholders' => true,
+        ],
+
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
