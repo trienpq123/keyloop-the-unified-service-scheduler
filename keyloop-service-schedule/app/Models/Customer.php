@@ -20,4 +20,9 @@ class Customer extends Model
     {
         return $this->hasMany(Vehicle::class);
     }
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
 }
