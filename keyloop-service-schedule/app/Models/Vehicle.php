@@ -11,6 +11,7 @@ class Vehicle extends Model
     protected $fillable = [
         'customer_id',
         'registration_number',
+        'normalized_registration_number',
         'make',
         'model',
         'manufactured_year',

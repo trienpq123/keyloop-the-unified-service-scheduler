@@ -37,4 +37,9 @@ class Dealership extends Model
     {
         return $this->hasMany(Appointment::class);
     }
+
+    public function businessHours(): HasMany
+    {
+        return $this->hasMany(BusinessHour::class);
+    }
 }

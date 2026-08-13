@@ -1,13 +1,12 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Http\Controllers\Api\V1;
 
 use App\Appointment\Actions\CheckAvailability;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CheckAvailabilityRequest;
 use App\Http\Resources\AvailabilityResource;
+use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 
 final class AvailabilityController extends Controller
@@ -29,8 +28,6 @@ final class AvailabilityController extends Controller
             $request->toData($dealership),
         );
 
-        return AvailabilityResource::make($result)
-            ->response()
-            ->setStatusCode(200);
+        return ApiResponse::success(AvailabilityResource::make($result)->resolve());
     }
 }

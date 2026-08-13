@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Appointment\Enums\AppointmentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,6 +29,7 @@ class Appointment extends Model
     protected function casts(): array
     {
         return [
+            'status' => AppointmentStatus::class,
             'start_at' => 'datetime',
             'end_at' => 'datetime',
             'cancelled_at' => 'datetime',

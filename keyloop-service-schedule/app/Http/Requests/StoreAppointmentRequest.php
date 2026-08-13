@@ -129,7 +129,7 @@ final class StoreAppointmentRequest extends FormRequest
             ),
             dealershipId: (int) $this->integer('dealership_id'),
             serviceTypeId: (int) $this->integer('service_type_id'),
-            requestedStartAt: CarbonImmutable::parse($this->string('requested_start_at'))->utc(),
+            requestedStartAt: CarbonImmutable::parse($this->string('requested_start_at')->toString())->utc(),
             idempotencyKey: $key,
             requestHash: $this->buildRequestHash(),
         );

@@ -25,8 +25,6 @@ final readonly class TimeRange
 
     /**
      * Build a TimeRange from a start instant and a ServiceType.
-     *
-     * @throws InvalidArgumentException when the service type duration <= 0.
      */
     public static function fromServiceType(
         CarbonImmutable $start,
@@ -44,5 +42,28 @@ final readonly class TimeRange
             start: $start->utc(),
             end: $start->addMinutes($duration)->utc(),
         );
+    }
+
+    public static function fromIso8601(string $start, string $end): self
+    {
+        return new self(
+            CarbonImmutable::parse($start)->utc(),
+            CarbonImmutable::parse($end)->utc(),
+        );
+    }
+
+    public function overlaps(self $other): bool
+    {
+        return $this->start->lt($other->end) && $this->end->gt($other->start);
+    }
+
+    public function contains(CarbonImmutable $instant): bool
+    {
+        return ! $instant->lt($this->start) && $instant->lt($this->end);
+    }
+
+    public function durationInMinutes(): int
+    {
+        return (int) $this->start->diffInMinutes($this->end);
     }
 }

@@ -14,6 +14,8 @@ class Customer extends Model
         'name',
         'email',
         'phone',
+        'normalized_email',
+        'normalized_phone',
     ];
 
     public function vehicles(): HasMany

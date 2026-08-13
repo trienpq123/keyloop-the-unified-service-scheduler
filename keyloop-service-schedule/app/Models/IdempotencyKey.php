@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Appointment\Enums\IdempotencyStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -24,6 +25,7 @@ class IdempotencyKey extends Model
     protected function casts(): array
     {
         return [
+            'status' => IdempotencyStatus::class,
             'response_status_code' => 'integer',
             'response_body' => 'array',
             'locked_at' => 'datetime',

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\OpenApi;
 
 use OpenApi\Attributes as OA;
@@ -9,7 +7,7 @@ use OpenApi\Attributes as OA;
 final class AvailabilityEndpoint
 {
     #[OA\Get(
-        path: '/api/v1/user/dealerships/{dealership}/availability',
+        path: '/api/v1/dealerships/{dealership}/availability',
         operationId: 'checkDealershipAvailability',
         summary: 'Check advisory appointment availability for a dealership',
         description: 'Calculates availability for the complete service duration. This endpoint does not reserve a technician or service bay.',

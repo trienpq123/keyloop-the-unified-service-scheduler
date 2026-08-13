@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Shared\Exceptions;
 
 enum ErrorCode: string
@@ -13,6 +11,7 @@ enum ErrorCode: string
     case AppointmentSlotUnavailable = 'APPOINTMENT_SLOT_UNAVAILABLE';
     case IdempotencyConflict = 'IDEMPOTENCY_CONFLICT';
     case IdempotencyRequestInProgress = 'IDEMPOTENCY_REQUEST_IN_PROGRESS';
+    case OutsideBusinessHours = 'OUTSIDE_BUSINESS_HOURS';
     case InternalServerError = 'INTERNAL_SERVER_ERROR';
 
     public function httpStatus(): int
@@ -25,6 +24,7 @@ enum ErrorCode: string
             self::AppointmentSlotUnavailable,
             self::IdempotencyConflict,
             self::IdempotencyRequestInProgress => 409,
+            self::OutsideBusinessHours => 422,
             self::InternalServerError => 500,
         };
     }
@@ -39,6 +39,7 @@ enum ErrorCode: string
             self::AppointmentSlotUnavailable => 'No qualified technician or service bay is available for the requested period.',
             self::IdempotencyConflict => 'The idempotency key has already been used with a different request payload.',
             self::IdempotencyRequestInProgress => 'The same operation is currently being processed.',
+            self::OutsideBusinessHours => 'The requested appointment period is outside dealership business hours.',
             self::InternalServerError => 'An unexpected error occurred. Please try again later.',
         };
     }
