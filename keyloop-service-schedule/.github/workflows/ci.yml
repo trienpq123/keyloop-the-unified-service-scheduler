@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: keyloop
+          POSTGRES_USER: keyloop
+          POSTGRES_PASSWORD: keyloop_secret
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U keyloop -d keyloop"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_pgsql
+          coverage: none
+      - run: composer validate --strict
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: cp .env.example .env && php artisan key:generate --force
+      - run: vendor/bin/pint --test
+      - run: php artisan test
+      - name: PostgreSQL migration and seed smoke test
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: keyloop
+          DB_USERNAME: keyloop
+          DB_PASSWORD: keyloop_secret
+        run: php artisan migrate --seed --force
+      - run: php artisan l5-swagger:generate && git diff --exit-code -- storage/api-docs

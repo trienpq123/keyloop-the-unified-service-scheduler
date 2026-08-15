@@ -1,59 +1,117 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Keyloop Unified Service Scheduler
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel and PostgreSQL backend for booking dealership service appointments.
+An appointment is confirmed only when a qualified technician and a service bay
+are available for the entire service duration.
 
-## About Laravel
+## What is included
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Guest appointment booking with customer and vehicle resolution.
+- Availability checks, deterministic allocation, PostgreSQL locking, and overlap prevention.
+- Idempotent `POST` requests, business hours, cancellation, structured JSON logs, and request correlation.
+- OpenAPI 3.0 documentation, executable cURL examples, SQLite feature tests, and a PostgreSQL concurrency harness.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requirements
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Docker Desktop with Docker Compose v2.
 
-## Learning Laravel
+No host PHP, Composer, Node, or PostgreSQL installation is required.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Build and run
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+cp .env.example .env
+docker compose run --rm app composer install --no-interaction --prefer-dist
+docker compose up -d
+docker compose exec app php artisan key:generate --force
+docker compose exec app php artisan migrate --seed --force
+docker compose exec app php artisan l5-swagger:generate
+```
 
-## Laravel Sponsors
+The API is then available at `http://localhost:8000` and Swagger UI at
+`http://localhost:8000/api/documentation`.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Useful commands:
 
-### Premium Partners
+```bash
+docker compose exec app php artisan test
+docker compose exec app vendor/bin/pint --test
+docker compose exec app php artisan l5-swagger:generate
+docker compose logs -f app
+docker compose down
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## API quick start
 
-## Contributing
+The development seed creates dealership `1` and service type `1`. Run the
+executable harness after startup:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+./scripts/curl-harness.sh
 
-## Code of Conduct
+# PostgreSQL competing-request proof (IT-03; resets no data itself)
+./scripts/verify-concurrency.sh
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+It demonstrates advisory availability, a successful booking, idempotency
+replay, changed-payload conflict, and validation failure. The date in the
+harness is deliberately explicit; replace it with an open Monday–Friday slot
+when running after August 2026.
 
-## Security Vulnerabilities
+The public endpoints are:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/api/v1/dealerships/{dealership}/availability` | Advisory availability check |
+| `POST` | `/api/v1/appointments` | Create/replay an idempotent appointment |
+| `GET` | `/api/v1/appointments/{appointment}` | Retrieve an appointment |
+| `PATCH` | `/api/v1/appointments/{appointment}/cancel` | Cancel an appointment and release resources |
 
-## License
+All API responses use a stable `success`/`data` or `success`/`error` envelope
+and include a request identifier in `meta.request_id`.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Testing and verification
+
+```bash
+docker compose exec app php artisan test
+```
+
+Feature tests run against SQLite to give fast, isolated database coverage for
+availability, booking, idempotency, rollback, and cancellation. PostgreSQL is
+the production database and locking target; use
+[tests/Integration/README.md](tests/Integration/README.md) to reproduce a
+competing-request verification against it.
+
+For a non-destructive clean-environment verification, run:
+
+```bash
+./scripts/verify-fresh-install.sh
+```
+
+The script copies the source into a temporary directory, starts an isolated
+Docker Compose project on alternate ports, installs dependencies, migrates,
+seeds, tests, generates OpenAPI, runs cURL, and cleans up.
+
+## Design and AI collaboration
+
+- [System design](../docs/system_design.md)
+- [AI collaboration narrative](docs/AI_COLLABORATION_NARRATIVE.md)
+
+## Troubleshooting
+
+- **Port is already in use:** change `APP_PORT` or `FORWARD_DB_PORT` in `.env`.
+- **Database not ready:** wait for `docker compose ps` to report PostgreSQL as healthy, then rerun the migrate command.
+- **Vendor directory missing:** run the `docker compose run --rm app composer install ...` command above.
+- **Swagger is stale:** rerun `docker compose exec app php artisan l5-swagger:generate`.
+- **Start over locally:** `docker compose down -v` removes this project’s database volume.
+
+## AI Collaboration Narrative
+
+GenAI was used as a collaborative engineering assistant to identify ambiguous
+scheduling rules, propose a modular Laravel design, generate initial
+boilerplate, and surface race conditions and boundary cases. Every suggestion
+was checked against the challenge brief and system design. The final code was
+refined through linting, database-backed feature tests, live PostgreSQL API
+checks, and manual review of transactions, error contracts, logging context,
+and generated OpenAPI documents. See the dedicated narrative for concrete
+examples and ownership decisions.

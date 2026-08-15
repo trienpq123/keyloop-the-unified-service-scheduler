@@ -1,5 +1,6 @@
 <?php
 
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -71,12 +72,12 @@ return [
         | it to LOG_STACK to combine it with other channels.
         */
         'app' => [
-            'driver'             => 'daily',
-            'path'               => storage_path('logs/app.log'),
-            'level'              => env('LOG_LEVEL', 'debug'),
-            'days'               => env('LOG_DAILY_DAYS', 14),
-            'formatter'          => Monolog\Formatter\JsonFormatter::class,
-            'formatter_with'     => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/app.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_DAILY_DAYS', 14),
+            'formatter' => JsonFormatter::class,
+            'formatter_with' => [
                 'dateFormat' => 'Y-m-d\TH:i:s.vP',
             ],
             'replace_placeholders' => true,

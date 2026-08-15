@@ -126,6 +126,7 @@ The implementation includes:
 - Automated tests for the core business logic
 - OpenAPI and cURL examples as the client-side stub
 - Idempotent appointment creation using an `Idempotency-Key`
+- Appointment cancellation that releases resources
 
 ### Non-goals
 
@@ -672,7 +673,7 @@ Vehicle ownership transfer is outside the challenge scope.
 | `created_at` | `timestamptz` | Not null | Record creation timestamp |
 | `updated_at` | `timestamptz` | Not null | Record update timestamp |
 
-Holiday calendars and operating-hour rules are outside the MVP scope.
+Holiday calendars are outside the MVP scope. Weekly opening hours are configured per dealership and evaluated in its IANA timezone.
 
 ### Service Types
 
@@ -1201,14 +1202,12 @@ points.
 
 ### Structured Logging
 
-The application records structured events including:
+Implemented structured events include:
 
 - `appointment.requested`
 - `appointment.confirmed`
 - `appointment.rejected`
-- `customer.resolved`
-- `customer.identity_conflict`
-- `resource.allocation_failed`
+- `appointment.cancelled`
 
 Relevant log context includes:
 
@@ -1222,9 +1221,9 @@ Relevant log context includes:
 Customer names, raw email addresses, phone numbers, vehicle registration
 numbers, idempotency keys, and other unnecessary sensitive values are not logged.
 
-### Metrics
+### Metrics and Tracing Evolution
 
-The design defines the following metrics:
+The following counters and histogram are designed but **not emitted by this MVP**:
 
 ```text
 appointment_requests_total
@@ -1236,9 +1235,17 @@ customer_identity_conflicts_total
 resource_allocation_failures_total
 ```
 
-A production deployment could expose these metrics through Prometheus or an
-equivalent monitoring platform. Deploying the monitoring platform is outside
-the challenge scope.
+A production deployment can expose these signals through Prometheus or an
+equivalent metrics backend. `appointment_requests_total`,
+`appointment_confirmed_total`, and `appointment_rejected_total` should use
+event/status labels only; no customer or vehicle identifiers. The duration
+histogram should observe request completion after the booking transaction.
+
+OpenTelemetry tracing is also a future evolution: create one server span per
+HTTP request, add child spans for idempotency, customer resolution, and
+resource allocation, then propagate the existing `request_id` as a span
+attribute. Neither metrics nor an OpenTelemetry exporter are implemented in
+this MVP.
 
 ### Request Correlation
 
@@ -1263,7 +1270,7 @@ communicates with external or independently deployed services.
 | Technology | Justification |
 |---|---|
 | PHP 8.3 | Provides enums, readonly classes, strict typing features, and compatibility with Laravel 11 |
-| Laravel 11 | Provides routing, validation, Eloquent, transactions, exception rendering, API Resources, and mature testing support |
+| Laravel 12 | Provides routing, validation, Eloquent, transactions, exception rendering, API Resources, and mature testing support |
 | PostgreSQL | Provides reliable transactions, row-level locking, foreign keys, JSONB, and indexing required by the booking workflow |
 | PHPUnit or Pest | Supports focused unit tests and database-backed feature tests |
 | OpenAPI | Defines a stable client contract and acts as the required client-side stub |
@@ -1293,24 +1300,12 @@ Unit tests cover pure business behavior:
 
 ### Feature Tests
 
-Feature tests cover the RESTful API and database:
+Implemented feature tests cover the RESTful API and SQLite database:
 
 - A valid guest appointment request returns HTTP 201.
-- A missing or malformed `Idempotency-Key` returns HTTP 422.
-- Customer and vehicle records are created for a new guest.
-- An existing customer is reused for repeat bookings.
-- An existing vehicle is reused for repeat bookings.
-- Missing email and phone returns HTTP 422.
-- Conflicting email and phone returns HTTP 409.
-- A registration number belonging to another customer returns HTTP 409.
-- A technician without the required service type is not selected.
-- A technician belonging to another dealership is not selected.
-- A service bay belonging to another dealership is not selected.
-- A busy technician causes another eligible technician to be selected.
-- A busy service bay causes another eligible bay to be selected.
-- Booking fails when no complete resource pair is available.
-- A failed booking does not persist a new customer or vehicle.
-- A confirmed appointment stores all required associations.
+- A valid guest appointment request returns HTTP 201 and persists all assignment IDs.
+- A failed outside-hours booking rolls back newly created customer, vehicle, and appointment rows.
+- Cancelling an appointment changes its status to `cancelled`, so it no longer reserves resources.
 - The availability endpoint does not create or reserve resources.
 
 ### Idempotency Tests
@@ -1318,7 +1313,7 @@ Feature tests cover the RESTful API and database:
 - Repeating the same key and payload returns the original result.
 - Repeating the same key does not create another appointment.
 - Reusing the key with a different payload returns HTTP 409.
-- Concurrent requests using the same key create at most one appointment.
+- Reusing the key with a changed payload returns HTTP 409.
 
 ### Concurrency Tests
 
@@ -1330,9 +1325,9 @@ database connections or processes:
 - At most one request confirms the contested appointment.
 - No technician or service bay ends with overlapping confirmed appointments.
 
-If full concurrency automation is limited by the test environment, the
-repository must include a reproducible concurrency test harness and document
-the limitation explicitly.
+The repository includes `tests/Integration/README.md`, a reproducible
+PostgreSQL harness. SQLite feature tests validate API behavior but cannot prove
+PostgreSQL row-lock behavior; that limitation is explicit.
 
 ### Contract Tests
 
@@ -1511,7 +1506,7 @@ Potential future improvements include:
 
 - Email or SMS ownership verification
 - Customer authentication and appointment-history access
-- Appointment cancellation and rescheduling
+- Appointment rescheduling
 - Technician shifts and dealership holiday calendars
 - Service-bay capability matching
 - Multiple services in one appointment

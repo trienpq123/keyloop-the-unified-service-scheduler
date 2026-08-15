@@ -42,4 +42,15 @@ final class AppointmentEndpoint
         responses: [new OA\Response(response: 200, description: 'Appointment found.'), new OA\Response(response: 404, description: 'Appointment not found.')],
     )]
     public function show(): void {}
+
+    #[OA\Patch(
+        path: '/api/v1/appointments/{appointment}/cancel',
+        operationId: 'cancelAppointment',
+        summary: 'Cancel a confirmed appointment and release its resources',
+        tags: ['Appointments'],
+        parameters: [new OA\PathParameter(name: 'appointment', schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [new OA\Property(property: 'reason', type: 'string', maxLength: 500)])),
+        responses: [new OA\Response(response: 200, description: 'Appointment cancelled.'), new OA\Response(response: 404, description: 'Appointment not found.')],
+    )]
+    public function cancel(): void {}
 }

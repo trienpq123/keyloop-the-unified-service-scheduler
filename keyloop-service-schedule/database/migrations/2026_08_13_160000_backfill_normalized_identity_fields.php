@@ -7,6 +7,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::connection()->getDriverName() !== 'pgsql') {
+            return;
+        }
+
         DB::table('customers')->whereNull('normalized_email')->whereNotNull('email')
             ->update(['normalized_email' => DB::raw('lower(trim(email))')]);
         DB::table('customers')->whereNull('normalized_phone')->whereNotNull('phone')

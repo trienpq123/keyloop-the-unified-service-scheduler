@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
@@ -22,6 +20,8 @@ final class AppointmentResource extends JsonResource
             'service_bay_id' => $this->service_bay_id,
             'start_at' => $this->start_at->toIso8601String(),
             'end_at' => $this->end_at->toIso8601String(),
+            'cancelled_at' => $this->cancelled_at?->toIso8601String(),
+            'cancellation_reason' => $this->cancellation_reason,
         ];
     }
 }

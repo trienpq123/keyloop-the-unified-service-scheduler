@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Dealership;
 use App\Models\BusinessHour;
+use App\Models\Dealership;
 use App\Models\ServiceBay;
 use App\Models\ServiceType;
 use App\Models\Technician;
