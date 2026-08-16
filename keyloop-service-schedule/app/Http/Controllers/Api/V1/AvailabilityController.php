@@ -16,7 +16,7 @@ final class AvailabilityController extends Controller
     ) {}
 
     /**
-     * GET /api/v1/user/dealerships/{dealership}/availability
+     * GET /api/v1/dealerships/{dealership}/availability
      *
      * Advisory check — does NOT reserve resources.
      */

@@ -8,6 +8,7 @@ use App\Appointment\Enums\AppointmentStatus;
 use App\Appointment\ValueObjects\TimeRange;
 use App\Models\ServiceBay;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 final class FindAvailableServiceBay
 {
@@ -35,6 +36,13 @@ final class FindAvailableServiceBay
     public function count(int $dealershipId, TimeRange $period): int
     {
         return $this->baseQuery($dealershipId, $period)->count();
+    }
+
+    /** @return Collection<int, ServiceBay> */
+    public function all(int $dealershipId, TimeRange $period): Collection
+    {
+        /** @var Collection<int, ServiceBay> */
+        return $this->baseQuery($dealershipId, $period)->get();
     }
 
     /**

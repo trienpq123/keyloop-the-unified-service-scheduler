@@ -116,6 +116,7 @@ The implementation includes:
 - Service-duration calculation
 - Qualified technician availability
 - Service bay availability
+- Booking catalog discovery for active dealerships with their offered service types
 - An advisory availability-check endpoint that does not reserve resources
 - Time-overlap detection
 - Transactional appointment creation
@@ -139,7 +140,7 @@ The following capabilities are outside the MVP scope:
 - Public access to customer appointment history
 - Payments
 - Email or SMS notifications
-- Customer, vehicle, and dealership CRUD APIs
+- Customer, vehicle, dealership, technician, service-bay, and service-type write APIs
 - Appointment rescheduling
 - Holiday and technician-shift calendars
 - Advanced technician workload balancing
@@ -636,8 +637,8 @@ represent authenticated user accounts.
 | `created_at` | `timestamptz` | Not null | Record creation timestamp |
 | `updated_at` | `timestamptz` | Not null | Record update timestamp |
 
-At least one of `normalized_email` or `normalized_phone` must be present. A
-database check constraint enforces this rule.
+At least one of `normalized_email` or `normalized_phone` must be present. The
+request validator and customer-resolution workflow enforce this MVP rule.
 
 For the MVP, one normalized email address or phone number identifies at most one
 guest customer profile. PostgreSQL unique constraints allow multiple `NULL`
@@ -650,9 +651,9 @@ values, so customers may omit either contact field.
 | `id` | `bigint` | Primary key | Internal vehicle identifier |
 | `customer_id` | `bigint` | Foreign key, not null | References `customers.id` |
 | `registration_number` | `varchar(30)` | Not null | Original registration number |
-| `normalized_registration_number` | `varchar(30)` | Unique, not null | Normalized registration number |
-| `make` | `varchar(100)` | Not null | Vehicle manufacturer |
-| `model` | `varchar(100)` | Not null | Vehicle model |
+| `normalized_registration_number` | `varchar(30)` | Unique after backfill; nullable during migration | Normalized registration number |
+| `make` | `varchar(100)` | Nullable | Vehicle manufacturer |
+| `model` | `varchar(100)` | Nullable | Vehicle model |
 | `created_at` | `timestamptz` | Not null | Record creation timestamp |
 | `updated_at` | `timestamptz` | Not null | Record update timestamp |
 
@@ -686,7 +687,7 @@ Holiday calendars are outside the MVP scope. Weekly opening hours are configured
 | `created_at` | `timestamptz` | Not null | Record creation timestamp |
 | `updated_at` | `timestamptz` | Not null | Record update timestamp |
 
-A database check constraint ensures that `duration_minutes > 0`.
+The application requires a positive duration when service types are configured.
 
 ### Technicians
 
@@ -742,9 +743,9 @@ The pair `(dealership_id, name)` must be unique.
 
 The MVP creates appointments directly with the `confirmed` status.
 
-The following constraints must hold:
+The following invariants are enforced by the application workflow:
 
-- A database check constraint ensures that `end_at > start_at`.
+- `TimeRange` requires `end_at > start_at`.
 - The vehicle must belong to the associated customer.
 - The technician and service bay must belong to the selected dealership.
 - The technician must support the selected service type.
@@ -758,12 +759,14 @@ are enforced by the application workflow and verified by automated tests.
 | Column | Type | Constraints | Description |
 |---|---|---|---|
 | `id` | `bigint` | Primary key | Internal record identifier |
-| `key` | `uuid` | Unique, not null | Client-provided idempotency key |
+| `scope` | `varchar(100)` | Not null | Use-case scope, currently `appointments.create` |
+| `idempotency_key` | `varchar(255)` | Unique with scope, not null | Client-provided UUID idempotency key |
 | `request_hash` | `char(64)` | Not null | SHA-256 hash of the canonical request |
 | `status` | `varchar(20)` | Not null | `processing` or `completed` |
-| `appointment_id` | `bigint` | Nullable, unique foreign key | Created appointment |
-| `response_code` | `integer` | Nullable | Stored HTTP response status |
+| `response_status_code` | `smallint` | Nullable | Stored HTTP response status |
 | `response_body` | `jsonb` | Nullable | Replayable business response excluding request-specific metadata |
+| `locked_at` | `timestamptz` | Nullable | Processing lock timestamp |
+| `completed_at` | `timestamptz` | Nullable | Completion timestamp |
 | `expires_at` | `timestamptz` | Not null | Record expiration time |
 | `created_at` | `timestamptz` | Not null | Record creation timestamp |
 | `updated_at` | `timestamptz` | Not null | Record update timestamp |
@@ -793,19 +796,19 @@ service_type_technician
     (technician_id, service_type_id) UNIQUE
 
 appointments
-    (technician_id, status, start_at, end_at)
+    (technician_id, start_at)
 
 appointments
-    (service_bay_id, status, start_at, end_at)
+    (service_bay_id, start_at)
+
+appointments
+    (dealership_id, start_at, end_at)
 
 appointments
     (customer_id, created_at)
 
 idempotency_keys
-    (key) UNIQUE
-
-idempotency_keys
-    (appointment_id) UNIQUE
+    (scope, idempotency_key) UNIQUE
 
 idempotency_keys
     (expires_at)
@@ -822,12 +825,40 @@ The backend exposes a versioned RESTful API under `/api/v1`.
 
 | Method | Endpoint | Purpose |
 |---|---|---|
+| `GET` | `/api/v1/dealerships?page=1&per_page=20` | Paginated active dealerships and their currently offered service types |
 | `GET` | `/api/v1/dealerships/{dealership}/availability` | Advisory availability check |
 | `POST` | `/api/v1/appointments` | Resolve guest data, allocate resources, and create an appointment |
+| `GET` | `/api/v1/appointments/{appointment}` | Retrieve a persisted appointment |
+| `PATCH` | `/api/v1/appointments/{appointment}/cancel` | Cancel an appointment and release its resources |
 
-Customer, vehicle, dealership, technician, service-bay, and service-type CRUD
-endpoints are outside the challenge scope. Required master data is provided
-through database seeders.
+The catalog endpoints are read-only discovery endpoints, not master-data CRUD.
+Customer, vehicle, dealership, technician, service-bay, and service-type write
+APIs remain outside the challenge scope.
+
+### Booking Discovery Flow
+
+1. Call `GET /api/v1/dealerships?page=1&per_page=20`. Each dealership includes service types for
+   which it has at least one active qualified technician; let the guest choose
+   both dealership and service type from this single response.
+2. Call the availability endpoint with the selected dealership, service type,
+   and an ISO-8601 `start_at` that includes an offset.
+3. The response returns the calculated `[start_at, end_at)` period and current
+   advisory technician/service-bay candidate lists.
+4. Submit `POST /api/v1/appointments`. The server—not the client—locks and
+   selects the final resource pair, so the advisory result is never a hold.
+
+Technicians and service bays have no direct compatibility relation in this MVP:
+both are independently constrained by dealership and time, while technician
+qualification is constrained by service type. Therefore every returned
+technician candidate can pair with every returned service-bay candidate at the
+instant checked. A future UI that requires a guest to choose an exact resource
+needs an explicit booking preference/assignment requirement; it must not imply
+that an advisory candidate is reserved.
+
+The dealership catalog uses offset pagination with `page` (minimum `1`) and
+`per_page` (default `20`, maximum `100`). Its envelope includes
+`meta.pagination.current_page`, `per_page`, `total`, and `last_page` alongside
+the request ID.
 
 ### Advisory Availability Check
 
@@ -847,7 +878,14 @@ Successful response:
     "start_at": "2026-08-17T02:00:00Z",
     "end_at": "2026-08-17T03:00:00Z",
     "available_technicians": 2,
-    "available_service_bays": 1
+    "available_service_bays": 1,
+    "technicians": [
+      { "id": 7, "name": "Technician A" },
+      { "id": 8, "name": "Technician B" }
+    ],
+    "service_bays": [
+      { "id": 4, "name": "Bay 01" }
+    ]
   },
   "meta": {
     "request_id": "019c28e1-30cf-7b81-a330-35dcb79e70db"
@@ -855,8 +893,10 @@ Successful response:
 }
 ```
 
-The endpoint is advisory and does not reserve resources. Appointment creation
-always repeats the availability check inside its database transaction.
+The endpoint validates the active dealership, active service type, and the
+complete local business-hours period. It is advisory and does not reserve
+resources. Appointment creation always repeats availability inside its database
+transaction.
 
 ### Create Appointment
 

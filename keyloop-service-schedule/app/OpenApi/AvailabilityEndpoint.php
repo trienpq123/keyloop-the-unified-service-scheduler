@@ -55,15 +55,27 @@ final class AvailabilityEndpoint
                                 new OA\Property(property: 'end_at', type: 'string', format: 'date-time'),
                                 new OA\Property(property: 'available_technicians', type: 'integer', minimum: 0),
                                 new OA\Property(property: 'available_service_bays', type: 'integer', minimum: 0),
+                                new OA\Property(property: 'technicians', type: 'array', items: new OA\Items(ref: '#/components/schemas/AvailabilityCandidate')),
+                                new OA\Property(property: 'service_bays', type: 'array', items: new OA\Items(ref: '#/components/schemas/AvailabilityCandidate')),
                             ],
                         ),
                     ],
                 ),
             ),
-            new OA\Response(response: 404, description: 'The requested service type does not exist or is inactive.'),
-            new OA\Response(response: 422, description: 'A required query parameter is missing or invalid.'),
+            new OA\Response(response: 404, description: 'The requested dealership or service type does not exist or is inactive.'),
+            new OA\Response(response: 422, description: 'A required query parameter is missing, invalid, or the complete period is outside business hours.'),
             new OA\Response(response: 500, description: 'An unexpected server error occurred.'),
         ],
     )]
     public function show(): void {}
+
+    #[OA\Schema(
+        schema: 'AvailabilityCandidate',
+        required: ['id', 'name'],
+        properties: [
+            new OA\Property(property: 'id', type: 'integer'),
+            new OA\Property(property: 'name', type: 'string'),
+        ],
+    )]
+    public function candidateSchema(): void {}
 }

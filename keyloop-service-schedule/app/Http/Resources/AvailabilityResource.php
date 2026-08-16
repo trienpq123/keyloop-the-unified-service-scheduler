@@ -18,6 +18,8 @@ final class AvailabilityResource extends JsonResource
             'end_at' => $this->resource->period->end->toIso8601String(),
             'available_technicians' => $this->resource->availableTechnicians,
             'available_service_bays' => $this->resource->availableServiceBays,
+            'technicians' => $this->resource->technicians,
+            'service_bays' => $this->resource->serviceBays,
         ];
     }
 }

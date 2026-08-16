@@ -3,6 +3,7 @@
 namespace App\Appointment\Actions;
 
 use App\Appointment\Exceptions\OutsideBusinessHours;
+use App\Appointment\ValueObjects\BusinessHoursSchedule;
 use App\Appointment\ValueObjects\TimeRange;
 use App\Models\Dealership;
 
@@ -10,14 +11,15 @@ final class AssertBusinessHours
 {
     public function execute(Dealership $dealership, TimeRange $period): void
     {
-        $start = $period->start->setTimezone($dealership->timezone);
-        $end = $period->end->setTimezone($dealership->timezone);
-        if ($start->toDateString() !== $end->toDateString()) {
-            throw new OutsideBusinessHours;
-        }
+        $weeklyHours = $dealership->businessHours()
+            ->get(['weekday', 'opens_at', 'closes_at'])
+            ->mapWithKeys(static fn ($hours): array => [$hours->weekday => [
+                'opens_at' => $hours->opens_at,
+                'closes_at' => $hours->closes_at,
+            ]])
+            ->all();
 
-        $hours = $dealership->businessHours()->where('weekday', $start->dayOfWeekIso)->first();
-        if ($hours === null || $start->format('H:i:s') < $hours->opens_at || $end->format('H:i:s') > $hours->closes_at) {
+        if (! (new BusinessHoursSchedule($weeklyHours))->contains($period, $dealership->timezone)) {
             throw new OutsideBusinessHours;
         }
     }

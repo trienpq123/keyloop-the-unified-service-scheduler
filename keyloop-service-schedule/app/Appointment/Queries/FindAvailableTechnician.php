@@ -6,6 +6,7 @@ use App\Appointment\Enums\AppointmentStatus;
 use App\Appointment\ValueObjects\TimeRange;
 use App\Models\Technician;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 final class FindAvailableTechnician
 {
@@ -31,6 +32,11 @@ final class FindAvailableTechnician
     public function count(int $dealershipId, int $serviceTypeId, TimeRange $period): int
     {
         return $this->baseQuery($dealershipId, $serviceTypeId, $period)->count();
+    }
+
+    public function all(int $dealershipId, int $serviceTypeId, TimeRange $period): Collection
+    {
+        return $this->baseQuery($dealershipId, $serviceTypeId, $period)->get();
     }
 
     private function baseQuery(int $dealershipId, int $serviceTypeId, TimeRange $period): Builder

@@ -3,6 +3,7 @@
 namespace App\Http\Responses;
 
 use App\Shared\Exceptions\ErrorCode;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Request;
 
@@ -22,6 +23,24 @@ final class ApiResponse
     public static function created(array|object $data): JsonResponse
     {
         return self::success($data, 201);
+    }
+
+    /** @param list<array<string, mixed>> $data */
+    public static function paginated(array $data, LengthAwarePaginator $paginator): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+            'meta' => [
+                ...self::meta(),
+                'pagination' => [
+                    'current_page' => $paginator->currentPage(),
+                    'per_page' => $paginator->perPage(),
+                    'total' => $paginator->total(),
+                    'last_page' => $paginator->lastPage(),
+                ],
+            ],
+        ]);
     }
 
     // -------------------------------------------------------------------------

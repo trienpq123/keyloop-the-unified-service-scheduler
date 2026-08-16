@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\BusinessHour;
 use App\Models\Dealership;
 use App\Models\ServiceBay;
 use App\Models\ServiceType;
@@ -19,14 +18,7 @@ class DevelopmentSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        foreach (range(1, 5) as $weekday) {
-            BusinessHour::create([
-                'dealership_id' => $dealership->id,
-                'weekday' => $weekday,
-                'opens_at' => '08:00:00',
-                'closes_at' => '17:00:00',
-            ]);
-        }
+        $this->call(DevelopmentBusinessHoursSeeder::class);
 
         ServiceBay::insert([
             [

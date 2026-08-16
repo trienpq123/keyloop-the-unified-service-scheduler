@@ -11,5 +11,9 @@ final readonly class AvailabilityResult
         public TimeRange $period,
         public int $availableTechnicians,
         public int $availableServiceBays,
+        /** @var list<AvailabilityCandidate> */
+        public array $technicians,
+        /** @var list<AvailabilityCandidate> */
+        public array $serviceBays,
     ) {}
 }
