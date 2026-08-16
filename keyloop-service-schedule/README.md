@@ -41,18 +41,6 @@ docker compose logs -f app
 docker compose down
 ```
 
-## API quick start
-
-The development seed creates dealership `1` and service type `1`. Run the
-executable harness after startup:
-
-```bash
-./scripts/curl-harness.sh
-
-# PostgreSQL competing-request proof (IT-03; resets no data itself)
-./scripts/verify-concurrency.sh
-```
-
 It demonstrates advisory availability, a successful booking, idempotency
 replay, changed-payload conflict, and validation failure. The date in the
 harness is deliberately explicit; replace it with an open Monday–Friday slot
@@ -62,6 +50,7 @@ The public endpoints are:
 
 | Method | Endpoint | Purpose |
 |---|---|---|
+| `GET` | `/api/v1/dealerships` | List dealerships |
 | `GET` | `/api/v1/dealerships/{dealership}/availability` | Advisory availability check |
 | `POST` | `/api/v1/appointments` | Create/replay an idempotent appointment |
 | `GET` | `/api/v1/appointments/{appointment}` | Retrieve an appointment |
@@ -76,21 +65,6 @@ and include a request identifier in `meta.request_id`.
 docker compose exec app php artisan test
 ```
 
-Feature tests run against SQLite to give fast, isolated database coverage for
-availability, booking, idempotency, rollback, and cancellation. PostgreSQL is
-the production database and locking target; use
-[tests/Integration/README.md](tests/Integration/README.md) to reproduce a
-competing-request verification against it.
-
-For a non-destructive clean-environment verification, run:
-
-```bash
-./scripts/verify-fresh-install.sh
-```
-
-The script copies the source into a temporary directory, starts an isolated
-Docker Compose project on alternate ports, installs dependencies, migrates,
-seeds, tests, generates OpenAPI, runs cURL, and cleans up.
 
 ## Design and AI collaboration
 
@@ -104,14 +78,3 @@ seeds, tests, generates OpenAPI, runs cURL, and cleans up.
 - **Vendor directory missing:** run the `docker compose run --rm app composer install ...` command above.
 - **Swagger is stale:** rerun `docker compose exec app php artisan l5-swagger:generate`.
 - **Start over locally:** `docker compose down -v` removes this project’s database volume.
-
-## AI Collaboration Narrative
-
-GenAI was used as a collaborative engineering assistant to identify ambiguous
-scheduling rules, propose a modular Laravel design, generate initial
-boilerplate, and surface race conditions and boundary cases. Every suggestion
-was checked against the challenge brief and system design. The final code was
-refined through linting, database-backed feature tests, live PostgreSQL API
-checks, and manual review of transactions, error contracts, logging context,
-and generated OpenAPI documents. See the dedicated narrative for concrete
-examples and ownership decisions.
