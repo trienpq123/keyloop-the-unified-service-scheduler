@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Appointment\Actions;
 
 use App\Appointment\Data\AvailabilityCandidate;
@@ -14,32 +12,6 @@ use App\Models\Dealership;
 use App\Models\ServiceType;
 use App\Shared\Exceptions\ResourceNotFoundException;
 
-/**
- * Advisory availability check action.
- *
- * Calculates the full appointment period and reports qualified technician and
- * service-bay candidates that are free within the requested dealership.
- *
- * This action is intentionally advisory:
- *   - It does NOT acquire row locks.
- *   - It does NOT reserve any resources.
- *   - The result can become stale by the time the client acts on it.
- *
- * Appointment creation always re-checks availability inside its own
- * transaction with row locks, so the advisory result is a convenience
- * only — not a guarantee.
- *
- * Responsibilities (SRP)
- * ----------------------
- * Orchestrate the availability check only. HTTP handling, transaction
- * control, and resource locking are outside this class's responsibility.
- *
- * DRY / DI
- * --------
- * Delegates all query logic to the injected Query Objects, which are the
- * single source of truth for availability criteria. No raw Eloquent queries
- * live here.
- */
 final class CheckAvailability
 {
     public function __construct(

@@ -27,8 +27,9 @@ final class AppointmentEndpoint
         ),
         responses: [
             new OA\Response(response: 201, description: 'Appointment confirmed.'),
-            new OA\Response(response: 409, description: 'Resource, identity, ownership, or idempotency conflict.'),
-            new OA\Response(response: 422, description: 'Invalid request or outside business hours.'),
+            new OA\Response(response: 409, description: 'Resource, identity, ownership, or idempotency conflict.', content: new OA\JsonContent(ref: '#/components/schemas/ApiErrorEnvelope')),
+            new OA\Response(response: 422, description: 'Invalid request or outside business hours.', content: new OA\JsonContent(ref: '#/components/schemas/ApiErrorEnvelope')),
+            new OA\Response(response: 500, description: 'Unexpected server error.', content: new OA\JsonContent(ref: '#/components/schemas/ApiErrorEnvelope')),
         ],
     )]
     public function create(): void {}
@@ -39,7 +40,7 @@ final class AppointmentEndpoint
         summary: 'Get a confirmed appointment',
         tags: ['Appointments'],
         parameters: [new OA\PathParameter(name: 'appointment', schema: new OA\Schema(type: 'integer'))],
-        responses: [new OA\Response(response: 200, description: 'Appointment found.'), new OA\Response(response: 404, description: 'Appointment not found.')],
+        responses: [new OA\Response(response: 200, description: 'Appointment found.'), new OA\Response(response: 404, description: 'Appointment not found.', content: new OA\JsonContent(ref: '#/components/schemas/ApiErrorEnvelope'))],
     )]
     public function show(): void {}
 
@@ -50,7 +51,7 @@ final class AppointmentEndpoint
         tags: ['Appointments'],
         parameters: [new OA\PathParameter(name: 'appointment', schema: new OA\Schema(type: 'integer'))],
         requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [new OA\Property(property: 'reason', type: 'string', maxLength: 500)])),
-        responses: [new OA\Response(response: 200, description: 'Appointment cancelled.'), new OA\Response(response: 404, description: 'Appointment not found.')],
+        responses: [new OA\Response(response: 200, description: 'Appointment cancelled.'), new OA\Response(response: 404, description: 'Appointment not found.', content: new OA\JsonContent(ref: '#/components/schemas/ApiErrorEnvelope'))],
     )]
     public function cancel(): void {}
 }

@@ -56,7 +56,6 @@ final class CreateAppointment
         try {
             return DB::transaction(
                 fn (): CreateAppointmentResult => $this->createInTransaction($data),
-                attempts: 3,
             );
         } catch (UniqueConstraintViolationException $exception) {
             throw $exception;

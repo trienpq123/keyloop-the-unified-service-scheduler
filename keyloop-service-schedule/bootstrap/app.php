@@ -32,7 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Handle domain exceptions (business rule violations)
         $exceptions->render(function (DomainException $e, Request $request): ?JsonResponse {
-            if (! $request->expectsJson()) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
                 return null;
             }
 
@@ -45,7 +45,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Handle validation exceptions
         $exceptions->render(function (ValidationException $e, Request $request): ?JsonResponse {
-            if (! $request->expectsJson()) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
                 return null;
             }
 
@@ -61,7 +61,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Handle model not found exceptions
         $exceptions->render(function (ModelNotFoundException $e, Request $request): ?JsonResponse {
-            if (! $request->expectsJson()) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
                 return null;
             }
 
@@ -78,7 +78,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Handle not found exceptions
         $exceptions->render(function (NotFoundHttpException $e, Request $request): ?JsonResponse {
-            if (! $request->expectsJson()) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
                 return null;
             }
 
@@ -104,7 +104,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Handle unexpected exceptions
         $exceptions->render(function (Throwable $e, Request $request): ?JsonResponse {
-            if (! $request->expectsJson()) {
+            if (! $request->is('api/*') && ! $request->expectsJson()) {
                 return null;
             }
 

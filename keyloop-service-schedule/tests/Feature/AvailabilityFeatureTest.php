@@ -52,4 +52,14 @@ final class AvailabilityFeatureTest extends TestCase
             ->assertNotFound()
             ->assertJsonPath('error.code', 'RESOURCE_NOT_FOUND');
     }
+
+    public function test_api_errors_use_the_json_envelope_when_the_client_accepts_any_content_type(): void
+    {
+        $this->withHeaders(['Accept' => '*/*'])
+            ->get('/api/v1/dealerships/1/availability')
+            ->assertUnprocessable()
+            ->assertHeader('Content-Type', 'application/json')
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error.code', 'VALIDATION_FAILED');
+    }
 }

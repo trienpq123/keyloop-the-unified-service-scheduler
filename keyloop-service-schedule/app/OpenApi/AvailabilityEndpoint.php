@@ -62,9 +62,9 @@ final class AvailabilityEndpoint
                     ],
                 ),
             ),
-            new OA\Response(response: 404, description: 'The requested dealership or service type does not exist or is inactive.'),
-            new OA\Response(response: 422, description: 'A required query parameter is missing, invalid, or the complete period is outside business hours.'),
-            new OA\Response(response: 500, description: 'An unexpected server error occurred.'),
+            new OA\Response(response: 404, description: 'The requested dealership or service type does not exist or is inactive.', content: new OA\JsonContent(ref: '#/components/schemas/ApiErrorEnvelope')),
+            new OA\Response(response: 422, description: 'A required query parameter is missing, invalid, or the complete period is outside business hours.', content: new OA\JsonContent(ref: '#/components/schemas/ApiErrorEnvelope')),
+            new OA\Response(response: 500, description: 'An unexpected server error occurred.', content: new OA\JsonContent(ref: '#/components/schemas/ApiErrorEnvelope')),
         ],
     )]
     public function show(): void {}
