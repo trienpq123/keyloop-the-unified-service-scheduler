@@ -1,6 +1,6 @@
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import type { Dealership } from "../../types/api";
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 
 const dealerships = [
     {
@@ -54,7 +54,7 @@ export const SelectServicePage = () => {
         setServiceTypeId(null);
     }
 
-    function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
         if (!selectedDealership || !selectedService) {
