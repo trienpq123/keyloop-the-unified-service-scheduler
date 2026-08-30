@@ -1,15 +1,11 @@
-import { Link, useLocation } from "react-router";
-
-type AvailabilityLocationService = {
-    dealershipId: number;
-    serviceTypeId: number;
-}
+import { Link } from "react-router";
+import { useBookings } from "../../features/bookings/BookingContext";
 
 export const AvailabilityPage = () => {
-    const location = useLocation();
-    const selection = location.state as AvailabilityLocationService | null;
+    const { state } = useBookings();
+    console.log(state);
 
-    if (!selection) {
+    if (!state.dealershipId || !state.serviceTypeId) {
         return (
             <section>
                 <h2>Check availability</h2>
@@ -23,8 +19,8 @@ export const AvailabilityPage = () => {
         <section>
             <h2>Check availability</h2>
 
-            <p>Dealership ID: {selection.dealershipId}</p>
-            <p>Service type ID: {selection.serviceTypeId}</p>
+            <p>Dealership ID: {state.dealershipId}</p>
+            <p>Service type ID: {state.serviceTypeId}</p>
 
             <Link to="/booking">Back</Link>
             {' | '}

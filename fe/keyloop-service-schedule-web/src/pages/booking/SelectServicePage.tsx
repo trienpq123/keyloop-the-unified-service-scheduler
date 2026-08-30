@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router";
 import type { Dealership } from "../../types/api";
 import { useState, type ChangeEvent } from "react";
+import { useBookings } from "../../features/bookings/BookingContext";
 
 const dealerships = [
     {
@@ -36,6 +37,9 @@ const dealerships = [
 
 export const SelectServicePage = () => {
     const navigate = useNavigate();
+    const { state, dispatch } = useBookings();
+
+    console.log(state);
 
     const [dealershipId, setDealershipId] = useState<number | null>(null);
     const [serviceTypeId, setServiceTypeId] = useState<number | null>(null);
@@ -63,12 +67,14 @@ export const SelectServicePage = () => {
         event.preventDefault();
 
         if (canContinue) {
-            navigate('/booking/availability', {
-                state: {
+            dispatch({
+                type: 'service-selection-saved',
+                payload: {
                     dealershipId: selectedDealership.id,
                     serviceTypeId: selectedService.id,
                 }
             });
+            navigate('/booking/availability');
         }
     }
 
