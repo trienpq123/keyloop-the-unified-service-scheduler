@@ -7,7 +7,7 @@ type AvailabilityLocationService = {
 
 export const AvailabilityPage = () => {
     const location = useLocation();
-    const selection = location.state as AvailabilityLocationService;
+    const selection = location.state as AvailabilityLocationService | null;
 
     if (!selection) {
         return (

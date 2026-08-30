@@ -54,12 +54,13 @@ export const SelectServicePage = () => {
         setServiceTypeId(null);
     }
 
+    function handleServiceChange(event: ChangeEvent<HTMLSelectElement>) {
+        const value = event.target.value;
+        setServiceTypeId(value === '' ? null : Number(value));
+    }
+
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
-
-        if (!selectedDealership || !selectedService) {
-            return;
-        }
 
         if (canContinue) {
             navigate('/booking/availability', {
@@ -87,10 +88,11 @@ export const SelectServicePage = () => {
                     ))}
                 </select>
 
-                <select value={serviceTypeId ?? ''} onChange={(event) => {
-                    const value = event.target.value;
-                    setServiceTypeId(value === '' ? null : Number(value));
-                }}>
+                <select
+                    value={serviceTypeId ?? ''}
+                    onChange={handleServiceChange}
+                    disabled={!selectedDealership}
+                >
                     <option value="">Select a service</option>
                     {availableServices.map(service => (
                         <option key={service.id} value={service.id}>
