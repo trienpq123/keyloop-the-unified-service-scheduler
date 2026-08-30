@@ -39,10 +39,8 @@ export const SelectServicePage = () => {
     const navigate = useNavigate();
     const { state, dispatch } = useBookings();
 
-    console.log(state);
-
-    const [dealershipId, setDealershipId] = useState<number | null>(null);
-    const [serviceTypeId, setServiceTypeId] = useState<number | null>(null);
+    const [dealershipId, setDealershipId] = useState<number | null>(state.dealershipId);
+    const [serviceTypeId, setServiceTypeId] = useState<number | null>(state.serviceTypeId);
 
     const selectedDealership = dealerships.find(d => d.id === dealershipId) ?? null;
     const availableServices = selectedDealership?.service_types ?? [];
