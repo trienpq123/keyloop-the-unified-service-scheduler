@@ -1,6 +1,6 @@
 import { useParams } from "react-router";
 
-export const AppointmentDetail = () => {
+export const AppointmentDetailPage = () => {
     const { appointmentId } = useParams();
     return (
         <section>

@@ -1,12 +1,12 @@
 import { createBrowserRouter } from "react-router";
 import { AppLayout } from "./Applayout";
-import { Homepage } from "../pages/HomePage";
+import { HomePage } from "../pages/HomePage";
 import { BookingLayout } from "../layouts/BookingLayout";
 import { SelectServicePage } from "../pages/booking/SelectServicePage";
 import { AvailabilityPage } from "../pages/booking/AvailabilityPage";
 import { CustomerDetailsPage } from "../pages/booking/CustomerDetailsPage";
 import { ReviewBookingPage } from "../pages/booking/ReviewBookingPage";
-import { AppointmentDetail } from "../pages/AppointmentDetailPage";
+import { AppointmentDetailPage } from "../pages/AppointmentDetailPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 
 export const router = createBrowserRouter([
@@ -16,7 +16,7 @@ export const router = createBrowserRouter([
         children: [
             {
                 index: true,
-                element: <Homepage />,
+                element: <HomePage />,
             },
             {
                 path: 'booking',
@@ -42,7 +42,7 @@ export const router = createBrowserRouter([
             },
             {
                 path: 'appointments/:appointmentId',
-                element: <AppointmentDetail />,
+                element: <AppointmentDetailPage />,
             },
             {
                 path: '*',

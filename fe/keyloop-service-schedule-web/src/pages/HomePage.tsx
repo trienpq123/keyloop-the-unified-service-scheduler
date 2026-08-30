@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 
-export const Homepage = () => {
+export const HomePage = () => {
     return (
         <section>
             <h1>Keyloop Service Scheduler</h1>
