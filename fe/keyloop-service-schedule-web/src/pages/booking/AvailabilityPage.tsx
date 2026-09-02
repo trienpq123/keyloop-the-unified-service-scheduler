@@ -1,8 +1,8 @@
 import { Link } from "react-router";
-import { useBookings } from "../../features/bookings/BookingContext";
+import { useBooking } from "../../features/bookings/useBooking";
 
 export const AvailabilityPage = () => {
-    const { state } = useBookings();
+    const { state } = useBooking();
     console.log(state);
 
     if (!state.dealershipId || !state.serviceTypeId) {
