@@ -1,5 +1,5 @@
 import { createBrowserRouter } from "react-router";
-import { AppLayout } from "./Applayout";
+import { AppLayout } from "./AppLayout";
 import { HomePage } from "../pages/HomePage";
 import { BookingLayout } from "../layouts/BookingLayout";
 import { SelectServicePage } from "../pages/booking/SelectServicePage";

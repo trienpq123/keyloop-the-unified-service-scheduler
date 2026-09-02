@@ -1,46 +1,53 @@
 import { useNavigate } from "react-router";
 import type { Dealership } from "../../types/api";
-import { useState, type ChangeEvent } from "react";
-import { useBookings } from "../../features/bookings/BookingContext";
-
-const dealerships = [
-    {
-        id: 1,
-        name: 'Ho Chi Minh Dealership',
-        timezone: 'Asia/Ho_Chi_Minh',
-        service_types: [
-            {
-                id: 1,
-                name: 'Oil change',
-                duration_minutes: 30,
-            },
-            {
-                id: 2,
-                name: 'Brake inspection',
-                duration_minutes: 60,
-            },
-        ],
-    },
-    {
-        id: 2,
-        name: 'Da Nang Dealership',
-        timezone: 'Asia/Ho_Chi_Minh',
-        service_types: [
-            {
-                id: 3,
-                name: 'General maintenance',
-                duration_minutes: 90,
-            },
-        ],
-    },
-] satisfies readonly Dealership[];
+import { useEffect, useState, type ChangeEvent } from "react";
+import { getDealerships } from "../../api/dealerships";
+import axios from "axios";
+import { useBooking } from "../../features/bookings/useBooking";
 
 export const SelectServicePage = () => {
     const navigate = useNavigate();
-    const { state, dispatch } = useBookings();
-
+    const { state, dispatch } = useBooking();
+    const [dealerships, setDealerships] = useState<Dealership[]>([]);
+    const [loadStatus, setLoadStatus] = useState<'loading' | 'success' | 'error'>('loading');
+    const [loadError, setLoadError] = useState<string | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
     const [dealershipId, setDealershipId] = useState<number | null>(state.dealershipId);
     const [serviceTypeId, setServiceTypeId] = useState<number | null>(state.serviceTypeId);
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        async function loadDealerships() {
+            try {
+                const result = await getDealerships(controller.signal);
+
+                setDealerships(result);
+                setLoadStatus('success');
+            } catch (error) {
+                if (controller.signal.aborted) {
+                    return;
+                }
+
+                setLoadError('error');
+
+                if (axios.isAxiosError(error)) {
+                    console.error('Failed to load dealerships:', error);
+                    setLoadStatus('error');
+                    setLoadError('Failed to load dealerships. Please try again.');
+
+                    return;
+                }
+
+                setLoadError('An unexpected error occurred');
+            }
+        }
+        loadDealerships();
+
+        return () => {
+            controller.abort();
+        }
+    }, [reloadKey]);
 
     const selectedDealership = dealerships.find(d => d.id === dealershipId) ?? null;
     const availableServices = selectedDealership?.service_types ?? [];
@@ -76,7 +83,30 @@ export const SelectServicePage = () => {
         }
     }
 
+    if (loadStatus === 'loading') {
+        return (
+            <section>
+                <h2>Select dealership and service</h2>
+                <p>Loading dealerships...</p>
+            </section>
+        );
+    }
 
+    if (loadStatus === 'error') {
+        return (
+            <section>
+                <h2>Select dealership and service</h2>
+                <p role="alert">{loadError}</p>
+
+                <button
+                    type="button"
+                    onClick={() => setReloadKey((current) => current + 1)}
+                >
+                    Retry
+                </button>
+            </section>
+        );
+    }
 
     return (
         <section>
