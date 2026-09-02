@@ -23,23 +23,19 @@ export const SelectServicePage = () => {
                 const result = await getDealerships(controller.signal);
 
                 setDealerships(result);
+                setLoadError(null);
                 setLoadStatus('success');
             } catch (error) {
                 if (controller.signal.aborted) {
                     return;
                 }
 
-                setLoadError('error');
-
-                if (axios.isAxiosError(error)) {
-                    console.error('Failed to load dealerships:', error);
-                    setLoadStatus('error');
-                    setLoadError('Failed to load dealerships. Please try again.');
-
-                    return;
-                }
-
-                setLoadError('An unexpected error occurred');
+                setLoadStatus('error');
+                setLoadError(
+                    axios.isAxiosError(error)
+                        ? 'Failed to load dealerships. Please try again.'
+                        : 'An unexpected error occurred. Please try again.',
+                );
             }
         }
         loadDealerships();

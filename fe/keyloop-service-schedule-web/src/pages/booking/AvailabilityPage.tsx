@@ -3,7 +3,6 @@ import { useBooking } from "../../features/bookings/useBooking";
 
 export const AvailabilityPage = () => {
     const { state } = useBooking();
-    console.log(state);
 
     if (!state.dealershipId || !state.serviceTypeId) {
         return (
