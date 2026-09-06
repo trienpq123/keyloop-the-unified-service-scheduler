@@ -8,6 +8,8 @@ import { CustomerDetailsPage } from "../pages/booking/CustomerDetailsPage";
 import { ReviewBookingPage } from "../pages/booking/ReviewBookingPage";
 import { AppointmentDetailPage } from "../pages/AppointmentDetailPage";
 import { NotFoundPage } from "../pages/NotFoundPage";
+import { AppointmentsPage } from "../pages/appointment/AppointmentsPage";
+import { AppointmentLayout } from "../layouts/AppointmentLayout";
 
 export const router = createBrowserRouter([
     {
@@ -41,8 +43,18 @@ export const router = createBrowserRouter([
                 ],
             },
             {
-                path: 'appointments/:appointmentId',
-                element: <AppointmentDetailPage />,
+                path: 'appointments',
+                element: <AppointmentLayout />,
+                children: [
+                    {
+                        index: true,
+                        element: <AppointmentsPage />,
+                    },
+                    {
+                        path: ':appointmentId',
+                        element: <AppointmentDetailPage />,
+                    },
+                ],
             },
             {
                 path: '*',
