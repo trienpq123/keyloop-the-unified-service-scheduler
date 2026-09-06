@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router";
-import type { Appointment } from "../types/api";
+import type { Appointment } from "../app/shared/api/api.types";
 import axios from "axios";
 import { getAppointment } from "../api/appointments";
 
@@ -72,7 +72,7 @@ export const AppointmentDetailPage = () => {
         return () => {
             abortController.abort();
         };
-    }, [isValidAppointmentId]);
+    }, [appointmentId]);
     if (loadState.status === 'loading') {
         return (
             <section>

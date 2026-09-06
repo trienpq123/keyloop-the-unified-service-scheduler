@@ -1,8 +1,6 @@
-import type {
-    ApiSuccessResponse,
-    Appointment,
-} from '../app/shared/api/api.types';
-import { apiClient } from './client';
+import type { ApiSuccessResponse } from '../shared/api/api.types';
+import { apiClient } from '../shared/api/client';
+import type { Appointment } from '../shared/api/api.types';
 
 export async function getAppointment(
     appointmentId: number,

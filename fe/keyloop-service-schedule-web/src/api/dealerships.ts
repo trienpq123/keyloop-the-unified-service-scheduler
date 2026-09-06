@@ -1,4 +1,4 @@
-import type { Dealership, PaginatedApiResponse } from "../types/api";
+import type { Dealership, PaginatedApiResponse } from "../app/shared/api/api.types";
 import { apiClient } from "./client";
 
 export async function getDealerships(signal?: AbortSignal): Promise<Dealership[]> {

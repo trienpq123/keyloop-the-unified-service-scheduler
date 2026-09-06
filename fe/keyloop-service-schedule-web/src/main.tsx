@@ -3,6 +3,7 @@ import { RouterProvider } from 'react-router'
 import { router } from './app/router'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { QueryProvider } from './app/provider/QueueProvider'
 
 const rootElement = document.getElementById("root")
 if (!rootElement) {
@@ -11,6 +12,8 @@ if (!rootElement) {
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <QueryProvider>
+      <RouterProvider router={router} />
+    </QueryProvider>
   </React.StrictMode>
 );    

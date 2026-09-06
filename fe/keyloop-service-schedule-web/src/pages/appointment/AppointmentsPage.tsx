@@ -1,12 +1,4 @@
-import { useEffect, useState } from "react";
-
 export function AppointmentsPage() {
-
-    useEffect(() => {
-        // TODO: Fetch appointments from API
-
-    }, []);
-
     return (
         <section>
             <h2>Appointments</h2>
