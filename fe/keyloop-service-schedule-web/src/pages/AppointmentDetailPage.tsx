@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router";
-import type { Appointment } from "../app/shared/api/api.types";
+import type { Appointment } from "../features/appointments";
 import axios from "axios";
 import { getAppointment } from "../api/appointments";
 

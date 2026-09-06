@@ -3,7 +3,7 @@ import { RouterProvider } from 'react-router'
 import { router } from './app/router'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { QueryProvider } from './app/provider/QueueProvider'
+import { QueryProvider } from './app/provider/QueryProvider'
 
 const rootElement = document.getElementById("root")
 if (!rootElement) {
