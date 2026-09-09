@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import type { Dealership } from "../../shared/api/api.types";
+import type { Dealership } from "../../features/dealerships";
 import { useEffect, useState, type ChangeEvent } from "react";
 import { getDealerships } from "../../api/dealerships";
 import axios from "axios";

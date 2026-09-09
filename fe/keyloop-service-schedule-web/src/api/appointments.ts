@@ -1,7 +1,7 @@
 import type {
     ApiSuccessResponse,
 } from '../shared/api/api.types';
-import { apiClient } from './client';
+import { apiClient } from '../shared/api/client';
 import type { Appointment } from '../features/appointments';
 
 export async function getAppointment(
